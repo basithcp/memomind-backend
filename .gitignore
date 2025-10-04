@@ -1,0 +1,45 @@
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+logs/*
+debug.log
+error.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Uploaded files (user data)
+uploads/
+tmp/
+*.pdf
+
+# Compiled or generated data
+dist/
+build/
+coverage/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+# OS-specific
+ehthumbs.db
+Desktop.ini
+
+# Training data or large data files
+*.traineddata
+
+# Misc
+*.bak
+*.tmp

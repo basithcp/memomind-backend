@@ -1,0 +1,1 @@
+This is a MERN stack project where we gonna build an web application where user can upload a pdf and then they can choose between option like generate 'notes','mcqs' and 'flash cards'.The application will generate from a LLM through API integration

@@ -1,0 +1,14 @@
+1.recieve file from frontend
+2.recieve mode of generation from fontend
+2.process the file to give to LLM
+3.send to LLM API
+4.recieve content from LLM API
+5.generate Notes
+6.generate MCQs
+7.generate Flash Cards
+8.save Notes
+9.save MCQs
+10.save Flash Cards
+11.convert Notes into pdf
+12.send pdf note
+13. deal with follow up prompts
