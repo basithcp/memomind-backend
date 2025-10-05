@@ -24,7 +24,7 @@ export const getMCQs = async (req, res) => {
 export const getNotes = async (req, res) => {
   const {userId} = req.query;
   try {
-    const notes = await Notes.find({userId})
+    const notes = await Notes.find({userId},{userId : 1, itemId : 1, itemName : 1, createdAt : 1, _id : 1})
       .sort(NEWEST_FIRST)
       .lean()
       .exec();
@@ -39,7 +39,7 @@ export const getNotes = async (req, res) => {
 export const getFlashcards = async (req, res) => {
   const {userId} = req.query;
   try {
-    const flashcards = await Flashcards.find({userId})
+    const flashcards = await Flashcards.find({userId},{userId : 1, itemId : 1, itemName : 1, createdAt : 1, _id : 1})
       .sort(NEWEST_FIRST)
       .lean()
       .exec();

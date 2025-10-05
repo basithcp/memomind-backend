@@ -34,7 +34,7 @@ export const postMCQs = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).lean();
 
-    return res.status(200).json({ data: saved ?? null });
+    return res.status(201).json({ data: saved ?? null });
   } catch (err) {
     console.error('postToMCQ error:', err);
     if (err?.code === 11000) return res.status(409).json({ error: 'A question set for this userId+itemId already exists (unique constraint).' });
@@ -70,7 +70,7 @@ export const postNotes = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).lean();
 
-    return res.status(200).json({ data: saved ?? null });
+    return res.status(201).json({ data: saved ?? null });
   } catch (err) {
     console.error("createOrUpdateNote error:", err);
     if (err?.code === 11000) return res.status(409).json({ error: "A note for this userId+itemId already exists (unique constraint)." });
@@ -109,7 +109,7 @@ export const postFlashcards = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).lean();
 
-    return res.status(200).json({ data: saved ?? null });
+    return res.status(201).json({ data: saved ?? null });
   } catch (err) {
     console.error('postToFC error:', err);
     if (err?.code === 11000) return res.status(409).json({ error: 'A question set for this userId+itemId already exists (unique constraint).' });
