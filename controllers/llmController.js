@@ -5,7 +5,7 @@ import JSON5 from 'json5';
 import { addPrevEntry, createChat, isExisting } from "./chat-utils/chat.js";
 import fetchContent from "./llm-utils/fetchContent.js";
 import parseToJson from './llm-utils/parseToJSON.js';
-import { postToFCs, postToMCQs, postToNotes } from './llm-utils/postToParseDB.js';
+import { postToFCs, postToMCQs, postToNotes, fetchFromNotes, fetchFromMCQs, fetchFromFCs } from './llm-utils/postToParseDB.js';
 import randomiseOptions from "./llm-utils/randomiseOptions.js";
 const COHERE_KEY = (process.env.COHERE_API_KEY || process.env.CO_API_KEY || "").trim();
 
@@ -157,7 +157,27 @@ const generateContent = async (req, res) => {
   try {
     const { userId, itemId, task } = req.query;
     const existing = await isExisting(userId, itemId, task);
-    if(existing.value) return res.status(409).json({error : "item already generated"});
+    
+    // If content already exists, fetch it from database instead of returning 409
+    if(existing.value) {
+      let fetchResult;
+      if (task === "notes") {
+        fetchResult = await fetchFromNotes(userId, itemId);
+      } else if (task === "mcqs") {
+        fetchResult = await fetchFromMCQs(userId, itemId);
+      } else if (task === "flashcards") {
+        fetchResult = await fetchFromFCs(userId, itemId);
+      } else {
+        return res.status(400).json({ error: "Invalid task selected." });
+      }
+      
+      if (fetchResult.success) {
+        return res.status(200).json(fetchResult.data);
+      } else {
+        return res.status(fetchResult.status).json({ error: fetchResult.error });
+      }
+    }
+    
     const fetchResponse = await fetchContent(userId, itemId);
     if (fetchResponse.error)
       return res.status(fetchResponse.status).json({ error: fetchResponse.error });

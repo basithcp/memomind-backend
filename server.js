@@ -18,7 +18,10 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(morgan('env'));
-
+app.use((req,res,next) => {
+  console.log(req.method, req.path);
+  next();
+}) ;
 // mount auth routes
 import authRoutes from './routes/auth.js';
 app.use('/api/auth', authRoutes);

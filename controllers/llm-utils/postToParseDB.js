@@ -142,5 +142,80 @@ const postToFCs = async (userId, itemId, document) => {
   }
 };
 
-export { postToFCs, postToMCQs, postToNotes };
+const fetchFromNotes = async (userId, itemId) => {
+  try {
+    if (!userId || !itemId) {
+      return { error: "Missing userId or itemId in request.", status: 400 };
+    }
+
+    const note = await Note.findOne({ userId, itemId }).lean();
+    
+    if (!note) {
+      return { error: "No note found for the given user and item.", status: 404 };
+    }
+
+    // Return the note in the same format as generated content
+    const formattedNote = {
+      title: note.title,
+      meta: note.meta,
+      sections: note.sections,
+      version: note.version
+    };
+
+    return { success: true, data: formattedNote };
+  } catch (err) {
+    console.error("fetchFromNotes error:", err);
+    return { error: "Failed to fetch note.", status: 500 };
+  }
+};
+
+const fetchFromMCQs = async (userId, itemId) => {
+  try {
+    if (!userId || !itemId) {
+      return { error: "Missing userId or itemId in request.", status: 400 };
+    }
+
+    const mcq = await MCQModel.findOne({ userId, itemId }).lean();
+    
+    if (!mcq) {
+      return { error: "No MCQ found for the given user and item.", status: 404 };
+    }
+
+    // Return the MCQ in the same format as generated content
+    const formattedMCQ = {
+      questions: mcq.questions
+    };
+
+    return { success: true, data: formattedMCQ };
+  } catch (err) {
+    console.error("fetchFromMCQs error:", err);
+    return { error: "Failed to fetch MCQ.", status: 500 };
+  }
+};
+
+const fetchFromFCs = async (userId, itemId) => {
+  try {
+    if (!userId || !itemId) {
+      return { error: "Missing userId or itemId in request.", status: 400 };
+    }
+
+    const fc = await FCModel.findOne({ userId, itemId }).lean();
+    
+    if (!fc) {
+      return { error: "No flashcards found for the given user and item.", status: 404 };
+    }
+
+    // Return the flashcards in the same format as generated content
+    const formattedFC = {
+      questions: fc.questions
+    };
+
+    return { success: true, data: formattedFC };
+  } catch (err) {
+    console.error("fetchFromFCs error:", err);
+    return { error: "Failed to fetch flashcards.", status: 500 };
+  }
+};
+
+export { postToFCs, postToMCQs, postToNotes, fetchFromNotes, fetchFromMCQs, fetchFromFCs };
 
