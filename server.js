@@ -13,7 +13,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const allowedOrigins = [
-  'https://your-frontend.vercel.app',
+  'https://memomind-frontendx.vercel.app',
   'http://localhost:5173'
 ];
 // middlewares
