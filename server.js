@@ -1,4 +1,23 @@
 // server.js
+// server.js — ADD THIS AT THE TOP (before everything else)
+try {
+  // ImageData and Path2D from canvas
+  const { ImageData, Path2D } = await import('canvas').then(m => m);
+  if (typeof globalThis.ImageData === 'undefined') globalThis.ImageData = ImageData;
+  if (typeof globalThis.Path2D === 'undefined') globalThis.Path2D = Path2D;
+} catch (err) {
+  // canvas might fail to load in some environments — we fall back gracefully
+  console.warn('canvas polyfill unavailable:', err?.message ?? err);
+}
+
+try {
+  const { DOMMatrix } = await import('dommatrix').then(m => m);
+  if (typeof globalThis.DOMMatrix === 'undefined') globalThis.DOMMatrix = DOMMatrix;
+} catch (err) {
+  console.warn('dommatrix polyfill unavailable:', err?.message ?? err);
+}
+
+
 import cors from "cors";
 import "dotenv/config";
 import express from "express";

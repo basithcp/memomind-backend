@@ -1,12 +1,43 @@
+// processPdf.js (excerpt / modification)
 import fsPromises from 'fs/promises';
 import os from 'os';
 import pLimit from 'p-limit';
-import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+// remove static import of pdf.mjs
+
 import { makeTempDir, safeRmDir } from './DirController.js';
 import ocrImage from './OCRController.js';
 import preprocessImage from './ProcessImage.js';
 import rasterizePageToPng from './Rasterize.js';
+
+let _getDocumentFn = null;
+
+async function ensurePdfjs() {
+  if (_getDocumentFn) return _getDocumentFn;
+
+  // Try node-friendly builds in order. Some pdfjs-dist versions expose different entry points.
+  try {
+    // Prefer CommonJS node build that avoids browser globals
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.js'); // works when pdf.js is ESM or CommonJS default export
+    _getDocumentFn = pdfjs.getDocument ?? pdfjs.default?.getDocument ?? (pdfjs.default || pdfjs).getDocument;
+    return _getDocumentFn;
+  } catch (err1) {
+    try {
+      // fallback to .node build if present
+      const pdfjs = await import('pdfjs-dist/legacy/build/pdf.node.js');
+      _getDocumentFn = pdfjs.getDocument ?? pdfjs.default?.getDocument ?? (pdfjs.default || pdfjs).getDocument;
+      return _getDocumentFn;
+    } catch (err2) {
+      // last resort: try the .mjs browser build (may still fail if polyfills missing)
+      const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+      _getDocumentFn = pdfjs.getDocument ?? pdfjs.default?.getDocument ?? (pdfjs.default || pdfjs).getDocument;
+      return _getDocumentFn;
+    }
+  }
+}
+
 export const processPdf = async (pdfPath, opts = {}) => {
+  const getDocument = await ensurePdfjs();
+
   const {
     augmentIfHasLayer = false,
     skipImageOnlyPages = true,
