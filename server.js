@@ -12,9 +12,20 @@ import path from "path";
 const app = express();
 const port = process.env.PORT || 3000;
 
+const allowedOrigins = [
+  'https://your-frontend.vercel.app',
+  'http://localhost:5173'
+];
 // middlewares
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: (origin, cb) => {
+    // allow no-origin (curl, server-to-server) and allow if in allowedOrigins
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(morgan('env'));
@@ -22,9 +33,14 @@ app.use((req,res,next) => {
   console.log(req.method, req.path);
   next();
 }) ;
+
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 // mount auth routes
 import authRoutes from './routes/auth.js';
 app.use('/api/auth', authRoutes);
+
+
 
 // ensure uploads directory exists
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
