@@ -10,23 +10,50 @@ const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 function findLocalChromium() {
   try {
+    // 1) check puppeteer's usual local-chromium location
     const base = path.join(process.cwd(), 'node_modules', 'puppeteer', '.local-chromium');
-    if (!fs.existsSync(base)) return null;
-    const releases = fs.readdirSync(base);
-    for (const r of releases) {
-      // check likely platforms
-      const linuxPath = path.join(base, r, 'chrome-linux', 'chrome');
-      if (fs.existsSync(linuxPath)) return linuxPath;
-      const winPath = path.join(base, r, 'chrome-win', 'chrome.exe');
-      if (fs.existsSync(winPath)) return winPath;
-      const macPath = path.join(base, r, 'chrome-mac', 'Chromium.app', 'Contents', 'MacOS', 'Chromium');
-      if (fs.existsSync(macPath)) return macPath;
+    if (fs.existsSync(base)) {
+      const releases = fs.readdirSync(base);
+      for (const r of releases) {
+        const linuxPath = path.join(base, r, 'chrome-linux', 'chrome');
+        if (fs.existsSync(linuxPath)) return linuxPath;
+        const winPath = path.join(base, r, 'chrome-win', 'chrome.exe');
+        if (fs.existsSync(winPath)) return winPath;
+        const macPath = path.join(base, r, 'chrome-mac', 'Chromium.app', 'Contents', 'MacOS', 'Chromium');
+        if (fs.existsSync(macPath)) return macPath;
+      }
     }
+
+    // 2) also check the 'chrome' location where @puppeteer/browsers sometimes places it in build
+    const altBase = path.join(process.cwd(), 'chrome');
+    if (fs.existsSync(altBase)) {
+      // chrome/<version>/chrome-linux64/chrome or chrome/<version>/chrome-linux/chrome
+      const versions = fs.readdirSync(altBase);
+      for (const v of versions) {
+        const c1 = path.join(altBase, v, 'chrome-linux64', 'chrome');
+        const c2 = path.join(altBase, v, 'chrome-linux', 'chrome');
+        if (fs.existsSync(c1)) return c1;
+        if (fs.existsSync(c2)) return c2;
+      }
+      // if the installer left a top-level 'chrome' binary (rare)
+      const direct = path.join(altBase, 'chrome');
+      if (fs.existsSync(direct)) return direct;
+    }
+
+    // 3) fallback locations (common)
+    const possible = [
+      '/usr/bin/chromium',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome'
+    ];
+    for (const p of possible) if (fs.existsSync(p)) return p;
   } catch (e) {
-    console.warn('Error scanning for local Chromium:', e?.message ?? e);
+    console.warn('Error scanning for chromium:', e?.message ?? e);
   }
   return null;
 }
+
 
 const exportNote = async (req, res) => {
   // ... your existing fetch and HTML generation ...
