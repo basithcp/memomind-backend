@@ -2,36 +2,58 @@
 import fs from "fs";
 import path from "path";
 import puppeteer from "puppeteer";
-import fetchProcessedNote from "./export-utils/fetchProcessedNote.js";
-import JSONToHTML from "./export-utils/JSONToHTML.js";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
-const exportNote = async (req, res) => {
-  const { userId, itemId } = req.query;
-  const { note } = await fetchProcessedNote(userId, itemId);
-  if (!note) return res.status(404).json({ error: "item could not be fetched" });
+// near top of controllers/exportController.js
+// ... other imports ...
 
-  const JSONNote = { title: note.title, sections: note.sections };
-  const html = await JSONToHTML(JSONNote);
+function findLocalChromium() {
+  try {
+    const base = path.join(process.cwd(), 'node_modules', 'puppeteer', '.local-chromium');
+    if (!fs.existsSync(base)) return null;
+    const releases = fs.readdirSync(base);
+    for (const r of releases) {
+      // check likely platforms
+      const linuxPath = path.join(base, r, 'chrome-linux', 'chrome');
+      if (fs.existsSync(linuxPath)) return linuxPath;
+      const winPath = path.join(base, r, 'chrome-win', 'chrome.exe');
+      if (fs.existsSync(winPath)) return winPath;
+      const macPath = path.join(base, r, 'chrome-mac', 'Chromium.app', 'Contents', 'MacOS', 'Chromium');
+      if (fs.existsSync(macPath)) return macPath;
+    }
+  } catch (e) {
+    console.warn('Error scanning for local Chromium:', e?.message ?? e);
+  }
+  return null;
+}
+
+const exportNote = async (req, res) => {
+  // ... your existing fetch and HTML generation ...
 
   let browser;
   try {
+    // Try environment override first (set this in Render if using system Chrome)
+    const exeFromEnv = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH;
+    let executablePath = exeFromEnv || findLocalChromium();
+
+    console.log('PUPPETEER_EXECUTABLE_PATH env:', exeFromEnv ?? 'not set');
+    console.log('Found local chromium at:', executablePath ?? 'none');
+
     const launchOptions = {
-      // use 'new' headless mode if supported; fallback to true otherwise
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     };
 
-    // If you have a system Chrome (or want to point to preinstalled chromium),
-    // set PUPPETEER_EXECUTABLE_PATH or CHROME_PATH in Render. This will override
-    // the bundled chromium (if present).
-    const exePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH;
-    if (exePath) {
-      launchOptions.executablePath = exePath;
+    if (executablePath) {
+      launchOptions.executablePath = executablePath;
+    } else {
+      console.warn('No chromium executable found. Puppeteer will try its default — check build logs for download failures.');
     }
 
     browser = await puppeteer.launch(launchOptions);
+
+    // ... rest of your code remains the same (page.setContent, pdf, save, send) ...
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1200, height: 800 });
